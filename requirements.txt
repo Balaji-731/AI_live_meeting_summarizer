@@ -1,0 +1,15 @@
+# requirements.txt
+streamlit==1.24.0
+numpy>=1.24.0
+sounddevice>=0.4.6
+soundfile>=0.12.1
+torch>=2.0.0
+openai-whisper>=20231117
+python-dotenv>=1.0.0
+librosa>=0.10.0
+scipy>=1.10.0
+matplotlib>=3.7.0
+transformers>=4.30.0
+sentencepiece>=0.1.99
+fpdf2>=2.7.5
+scikit-learn>=1.2.0

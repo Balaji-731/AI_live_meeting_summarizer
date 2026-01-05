@@ -1,0 +1,7 @@
+venv/
+.env
+__pycache__/
+data/
+recordings/
+exports/
+presentations/

@@ -8,10 +8,10 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def send_summary_email(recipient, subject, body, attachment_path=None):
+def send_summary_email(sender, sender_password, recipient, subject, body, attachment_path=None):
     try:
         msg = MIMEMultipart()
-        msg['From'] = EMAIL_SETTINGS['EMAIL_SENDER']
+        msg['From'] = sender
         msg['To'] = recipient
         msg['Subject'] = subject
         msg.attach(MIMEText(body, 'plain'))
@@ -24,7 +24,7 @@ def send_summary_email(recipient, subject, body, attachment_path=None):
         
         with smtplib.SMTP(EMAIL_SETTINGS['SMTP_SERVER'], EMAIL_SETTINGS['SMTP_PORT']) as server:
             server.starttls()
-            server.login(EMAIL_SETTINGS['EMAIL_SENDER'], EMAIL_SETTINGS['EMAIL_PASSWORD'])
+            server.login(sender, sender_password)
             server.send_message(msg)
         return True
     except Exception as e:

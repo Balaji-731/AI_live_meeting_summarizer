@@ -56,16 +56,28 @@ def main():
         send_email = st.checkbox("Enable email", value=False)
         
         if send_email:
-            if not all([EMAIL_SETTINGS.get('EMAIL_SENDER'), EMAIL_SETTINGS.get('EMAIL_PASSWORD'),
-                       EMAIL_SETTINGS.get('SMTP_SERVER'), EMAIL_SETTINGS.get('SMTP_PORT')]):
-                st.warning("⚠️ Configure email settings in .env")
+            if not all([EMAIL_SETTINGS.get('SMTP_SERVER'), EMAIL_SETTINGS.get('SMTP_PORT')]):
+                st.warning("⚠️ Configure SMTP settings in .env")
             else:
-                email_recipient = st.text_input("To", "")
-                email_subject = st.text_input("Subject", "Meeting Summary")
-                include_pdf = st.checkbox("Attach PDF", value=True)
+                st.markdown("""
+                **Note:** Use the App Password, NOT your regular Gmail password!
+                """)
                 
-                if st.session_state.transcript and email_recipient and "@" in email_recipient:
-                    if st.button("✉️ Send Summary"):
+                email_sender = st.text_input("📧 Your Gmail Address", "")
+                app_password = st.text_input("🔑 Gmail App Password (16 characters)", type="password", help="Generate App Password from: https://myaccount.google.com/apppasswords")
+                email_recipient = st.text_input("📨 Recipient Email", "")
+                email_subject = st.text_input("📝 Subject", "Meeting Summary")
+                include_pdf = st.checkbox("📎 Attach PDF", value=True)
+                
+                # Validate App Password format (16 characters)
+                app_password_valid = len(app_password.replace(" ", "")) == 16 if app_password else False
+                
+                if st.session_state.transcript and email_sender and email_recipient and "@" in email_sender and "@" in email_recipient:
+                    if not app_password:
+                        st.sidebar.error("❌ App Password is required")
+                    elif not app_password_valid:
+                        st.sidebar.error("❌ Invalid App Password format (should be 16 characters)")
+                    elif st.button("✉️ Send Email with App Password"):
                         try:
                             # Create a temporary PDF if requested
                             pdf_attachment = None
@@ -79,14 +91,18 @@ def main():
                                 ):
                                     pdf_attachment = pdf_filename
                             
-                            # Send email with or without PDF attachment
+                            # Send email with App Password
                             if send_summary_email(
+                                sender=email_sender,
+                                sender_password=app_password.replace(" ", ""),  # Remove spaces from App Password
                                 recipient=email_recipient,
                                 subject=email_subject,
                                 body=f"Meeting Summary:\n\n{st.session_state.summary}",
                                 attachment_path=pdf_attachment
                             ):
-                                st.sidebar.success("✓ Email sent!")
+                                st.sidebar.success("✅ Email sent successfully using App Password!")
+                            else:
+                                st.sidebar.error("❌ Failed to send email. Check your App Password and try again.")
                             
                             # Clean up temporary PDF
                             if include_pdf and pdf_attachment and os.path.exists(pdf_attachment):
@@ -96,7 +112,7 @@ def main():
                                     st.sidebar.warning(f"Could not remove temporary PDF: {str(e)}")
                                     
                         except Exception as e:
-                            st.sidebar.error(f"Error: {str(e)}")
+                            st.sidebar.error(f"❌ Email error: {str(e)}")
     
     col1, col2 = st.columns(2)
     
@@ -125,10 +141,10 @@ def main():
         
         if st.session_state.transcript:
             st.subheader("Transcript")
-            st.text_area("", st.session_state.transcript, height=200, key="transcript_area")
+            st.text_area("Transcript", st.session_state.transcript, height=200, key="transcript_area")
             
             st.subheader("Summary")
-            st.text_area("", st.session_state.summary, height=150, key="summary_area")
+            st.text_area("Summary", st.session_state.summary, height=150, key="summary_area")
             
             if st.button("📋 Copy Transcript"):
                 st.session_state.transcript = st.session_state.transcript
